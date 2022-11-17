@@ -26,26 +26,35 @@ async function run() {
         app.get('/appoinmentoptions', async (req, res) => {
             //getting the the booking date
             const date = req.query.date;
-            console.log(date);
+            //console.log(date);
             const query = {};
             const options = await appointmentOptionsCollection.find(query).toArray();
             //finding the bookings for the provided date
             const bookingQuery = { appointmentDate: date }
             const alreadyBooked = await bookingsCollection.find(bookingQuery).toArray();
-            console.log(alreadyBooked)
+            //console.log(alreadyBooked)
             //finding the booking for from all treatments in that certaindates
             options.forEach(option => {
                 const optionBooked = alreadyBooked.filter(book => book.treatmentName === option.name)
                 const bookedSlot = optionBooked.map(book => book.slot);
                 const remainingSlots = option.slots.filter(slot => !bookedSlot.includes(slot));
                 option.slots = remainingSlots;
-                console.log(date, option.name, remainingSlots.length);
+                //console.log(date, option.name, remainingSlots.length);
             })
             res.send(options)
         })
 
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
+            const query = {
+                appointmentDate: booking.appointmentDate
+            }
+
+            const alreadyBooked = await bookingsCollection.find(query).toArray();
+            if (alreadyBooked.length) {
+                const message = `You already have booking on ${booking.appointmentDate}`;
+                return res.send({ acknowledged: false, message })
+            }
             console.log(booking)
             const result = await bookingsCollection.insertOne(booking);
             res.send(result)
