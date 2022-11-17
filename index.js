@@ -44,10 +44,20 @@ async function run() {
             res.send(options)
         })
 
+        app.get('/bookings', async (req, res) => {
+            const email = req.query.email;
+            console.log('this', email)
+            const query = { email: email };
+            const result = await bookingsCollection.find(query).toArray();
+            res.send(result);
+        })
+
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
             const query = {
-                appointmentDate: booking.appointmentDate
+                appointmentDate: booking.appointmentDate,
+                email: booking.email,
+                treatmentName: booking.treatmentName
             }
 
             const alreadyBooked = await bookingsCollection.find(query).toArray();
