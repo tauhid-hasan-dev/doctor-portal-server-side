@@ -18,8 +18,10 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 async function run() {
     try {
-        const appointmentOptionsCollection = client.db('doctorsPortal').collection('appointmentOptions')
-        const bookingsCollection = client.db('doctorsPortal').collection('bookings')
+        const appointmentOptionsCollection = client.db('doctorsPortal').collection('appointmentOptions');
+        const bookingsCollection = client.db('doctorsPortal').collection('bookings');
+        const usersCollection = client.db('doctorsPortal').collection('users');
+
 
 
         //use aggregate to query multilple collection and then merge data
@@ -67,6 +69,14 @@ async function run() {
             }
             console.log(booking)
             const result = await bookingsCollection.insertOne(booking);
+            res.send(result)
+        })
+
+
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            console.log(user);
+            const result = await usersCollection.insertOne(user);
             res.send(result)
         })
 
