@@ -16,14 +16,31 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 console.log(uri);
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+function verifyJwt(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send("Unauthorized Access")
+    }
+    const token = authHeader.split(' ')[1];
+    console.log(token);
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return err.status(403).send('Forbidden Access')
+        }
+        req.decoded = decoded;
+        next();
+    })
+
+}
+
+
+
 
 async function run() {
     try {
         const appointmentOptionsCollection = client.db('doctorsPortal').collection('appointmentOptions');
         const bookingsCollection = client.db('doctorsPortal').collection('bookings');
         const usersCollection = client.db('doctorsPortal').collection('users');
-
-
 
         //use aggregate to query multilple collection and then merge data
         app.get('/appoinmentoptions', async (req, res) => {
@@ -47,8 +64,14 @@ async function run() {
             res.send(options)
         })
 
-        app.get('/bookings', async (req, res) => {
+        app.get('/bookings', verifyJwt, async (req, res) => {
             const email = req.query.email;
+            const decodedEmail = req.decoded.email;
+
+            if (email !== decodedEmail) {
+                return res.status(403).send('Forbidden Access')
+            }
+
             console.log('this', email)
             const query = { email: email };
             const result = await bookingsCollection.find(query).toArray();
@@ -80,10 +103,10 @@ async function run() {
             const user = await usersCollection.findOne(query);
             if (user) {
                 const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1d' });
-                return res.send({ accesstoken: token });
+                return res.send({ accessToken: token });
             }
             console.log(user)
-            res.status(403).send({ accesstoken: '' });
+            res.status(403).send({ accessToken: '' });
         })
 
         app.post('/users', async (req, res) => {
