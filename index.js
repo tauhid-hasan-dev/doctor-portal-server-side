@@ -34,8 +34,6 @@ function verifyJwt(req, res, next) {
 }
 
 
-
-
 async function run() {
     try {
         const appointmentOptionsCollection = client.db('doctorsPortal').collection('appointmentOptions');
@@ -62,6 +60,12 @@ async function run() {
                 //console.log(date, option.name, remainingSlots.length);
             })
             res.send(options)
+        })
+
+        app.get('/appointmentSpecialty', async (req, res) => {
+            const query = {};
+            const result = await appointmentOptionsCollection.find(query).project({ name: 1 }).toArray();
+            res.send(result)
         })
 
         app.get('/bookings', verifyJwt, async (req, res) => {
