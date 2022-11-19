@@ -39,6 +39,7 @@ async function run() {
         const appointmentOptionsCollection = client.db('doctorsPortal').collection('appointmentOptions');
         const bookingsCollection = client.db('doctorsPortal').collection('bookings');
         const usersCollection = client.db('doctorsPortal').collection('users');
+        const doctorsCollection = client.db('doctorsPortal').collection('doctors');
 
         //use aggregate to query multilple collection and then merge data
         app.get('/appoinmentoptions', async (req, res) => {
@@ -155,6 +156,18 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updateDoc, options);
             res.send(result)
         })
+
+        app.get('/doctors', async (req, res) => {
+            const query = {};
+            const doctors = await doctorsCollection.find(query).toArray();
+            res.send(doctors);
+        })
+
+        app.post('/doctors', async (req, res) => {
+            const doctor = req.body;
+            const result = await doctorsCollection.insertOne(doctor);
+            res.send(result);
+        });
 
 
 
