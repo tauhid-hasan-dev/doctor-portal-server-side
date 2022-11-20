@@ -5,9 +5,11 @@ const cors = require('cors');
 const app = express();
 require('dotenv').config();
 var jwt = require('jsonwebtoken');
+const stripe = require("stripe")(process.env.STRIPE_SECRET);
 
 const port = process.env.PORT || 5000;
 
+//middleware
 app.use(cors());
 app.use(express.json());
 
@@ -94,6 +96,13 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const booking = await bookingsCollection.findOne(query);
+            res.send(booking);
+        })
+
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
             const query = {
@@ -110,6 +119,23 @@ async function run() {
             console.log(booking)
             const result = await bookingsCollection.insertOne(booking);
             res.send(result)
+        })
+
+
+        app.post('/create-payment-intent', async (req, res) => {
+            const booking = req.body;
+            const price = booking.price;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                "payment_method_types": [
+                    "card"
+                ],
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
         })
 
 
@@ -162,6 +188,19 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updateDoc, options);
             res.send(result)
         })
+
+        //temporary api for injecting data
+        /*  app.get('/addprice', async (req, res) => {
+             const filter = {};
+             const options = { upsert: true };
+             const updateDoc = {
+                 $set: {
+                     price: 99
+                 },
+             };
+             const result = await appointmentOptionsCollection.updateMany(filter, updateDoc, options);
+             res.send(result)
+         }) */
 
         app.get('/doctors', verifyJwt, verifyAdmin, async (req, res) => {
             const query = {};
