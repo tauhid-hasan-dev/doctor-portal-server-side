@@ -42,6 +42,7 @@ async function run() {
         const bookingsCollection = client.db('doctorsPortal').collection('bookings');
         const usersCollection = client.db('doctorsPortal').collection('users');
         const doctorsCollection = client.db('doctorsPortal').collection('doctors');
+        const paymentsCollection = client.db('doctorsPortal').collection('payments');
 
         //make sure you verifyAdmin after verifyJwt
         const verifyAdmin = async (req, res, next) => {
@@ -53,6 +54,8 @@ async function run() {
             }
             next();
         }
+
+
 
         //use aggregate to query multilple collection and then merge data
         app.get('/appoinmentoptions', async (req, res) => {
@@ -136,6 +139,12 @@ async function run() {
             res.send({
                 clientSecret: paymentIntent.client_secret,
             });
+        })
+
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const result = await paymentsCollection.insertOne(payment);
+            res.send(result);
         })
 
 
